@@ -1,1 +1,1 @@
-# guildgrid.gg
+# guildgrid.app
