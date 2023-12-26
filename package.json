@@ -1,0 +1,16 @@
+{
+    "name": "guildgrid",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "web": "nodemon packages/web/index.js",
+        "bot": "nodemon packages/bot/index.mjs",
+        "dev": "concurrently \"cd packages/web && npm run dev\" \"npm run bot\""
+      },
+    "devDependencies": {
+        "concurrently": "^8.2.2",
+        "nodemon": "^3.0.2"
+    }
+}
