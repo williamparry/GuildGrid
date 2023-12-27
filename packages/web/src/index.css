@@ -12,3 +12,10 @@ input {
     height: 100vh; /* Use 100% if it's within another container with a defined height */
     display: flex;
 }
+
+
+main {
+    background: #fff;
+    width: 100%;
+    overflow: scroll;
+}

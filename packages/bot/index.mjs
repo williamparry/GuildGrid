@@ -66,9 +66,39 @@ async function insertNewGuild(guildId) {
 
 async function updateGuildMemberships(guild) {
 	try {
+		// Check if the guild is currently being updated
+		const { data: guildData, error: guildFetchError } = await supabase
+			.from('gg_guilds')
+			.select('is_updating')
+			.eq('id', guild.id)
+			.single()
+
+		if (guildFetchError) {
+			console.error(
+				`Error fetching guild data for ${guild.id}:`,
+				guildFetchError
+			)
+			return
+		}
+
+		if (guildData?.is_updating) {
+			console.log(
+				`Guild ${guild.id} is currently being updated by another process.`
+			)
+			return
+		}
+
+		// Set the guild as updating
+		await supabase
+			.from('gg_guilds')
+			.update({ is_updating: true })
+			.eq('id', guild.id)
+
+		// Fetch current guild members
 		const currentMembers = await guild.members.fetch()
 		const currentMemberIds = currentMembers.map((member) => member.user.id)
 
+		// Fetch stored memberships
 		const { data: storedMemberships, error: fetchError } = await supabase
 			.from('gg_guild_memberships')
 			.select('user_id')
@@ -76,9 +106,10 @@ async function updateGuildMemberships(guild) {
 
 		if (fetchError) {
 			console.error('Error fetching stored memberships:', fetchError)
-			return
+			throw fetchError // Throw error to ensure is_updating is reset
 		}
 
+		// Determine members to add and remove
 		const storedMemberIds = storedMemberships.map(
 			(membership) => membership.user_id
 		)
@@ -88,16 +119,12 @@ async function updateGuildMemberships(guild) {
 		const membersToRemove = storedMemberIds.filter(
 			(id) => !currentMemberIds.includes(id)
 		)
+
 		// Perform bulk insert for new members
-		if (membersToAdd.length > 0) {
-			const newMembers = membersToAdd.map((userId) => ({
-				user_id: userId,
-				guild_id: guild.id,
-			}))
-			console.log(newMembers)
-			for (const member of newMembers) {
-				await supabase.from('gg_guild_memberships').insert(member)
-			}
+		for (const userId of membersToAdd) {
+			await supabase
+				.from('gg_guild_memberships')
+				.insert({ user_id: userId, guild_id: guild.id })
 		}
 
 		// Perform bulk delete for members to remove
@@ -107,8 +134,19 @@ async function updateGuildMemberships(guild) {
 				.delete()
 				.match({ user_id: memberId, guild_id: guild.id })
 		}
+
+		// Reset the is_updating flag after update
+		await supabase
+			.from('gg_guilds')
+			.update({ is_updating: false })
+			.eq('id', guild.id)
 	} catch (error) {
 		console.error(`Failed to process guild ${guild.id}:`, error)
+		// Reset the is_updating flag in case of error
+		await supabase
+			.from('gg_guilds')
+			.update({ is_updating: false })
+			.eq('id', guild.id)
 	}
 }
 
