@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createClient, User } from '@supabase/supabase-js'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import '@silevis/reactgrid/styles.css'
 import AppBar from '@mui/material/AppBar'
 import CssBaseline from '@mui/material/CssBaseline'
@@ -68,21 +68,29 @@ function App() {
 	}
 
 	return (
-		<ThemeProvider theme={darkTheme}>
-			<CssBaseline />
-			<AppBar position="static">
-				<Toolbar>
-					<Typography variant="h6" sx={{ flexGrow: 1 }}>
-						Guild Grid
-					</Typography>
-					<IconButton edge="end" color="inherit">
-						<AccountCircle />
-					</IconButton>
-				</Toolbar>
-			</AppBar>
+		<Router>
+			<ThemeProvider theme={darkTheme}>
+				<CssBaseline />
+				<AppBar position="static">
+					<Toolbar>
+						<Typography variant="h6" sx={{ flexGrow: 1 }}>
+							<Link
+								to="/"
+								style={{
+									color: '#fff',
+									textDecoration: 'none',
+								}}
+							>
+								Guild Grid
+							</Link>
+						</Typography>
+						<IconButton edge="end" color="inherit">
+							<AccountCircle />
+						</IconButton>
+					</Toolbar>
+				</AppBar>
 
-			<main>
-				<Router>
+				<main>
 					<Routes>
 						<Route path="/" element={<Home />}></Route>
 						<Route
@@ -90,9 +98,9 @@ function App() {
 							element={<Grid />}
 						></Route>
 					</Routes>
-				</Router>
-			</main>
-		</ThemeProvider>
+				</main>
+			</ThemeProvider>
+		</Router>
 	)
 }
 

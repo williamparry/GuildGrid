@@ -1,11 +1,11 @@
 import {
-    Link,
-    List,
-    ListItemButton,
-    ListItemText,
-    Paper,
-    Typography
+	List,
+	ListItemButton,
+	ListItemText,
+	Paper,
+	Typography,
 } from '@mui/material'
+import { Link } from 'react-router-dom'
 import '@silevis/reactgrid/styles.css'
 import { createClient } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
