@@ -161,7 +161,7 @@ const startBot = async () => {
 
 	client.once('ready', async () => {
 		console.log(`Logged in as ${client.user.tag}!`)
-
+		console.log('guilds', client.guilds)
 		try {
 			client.guilds.cache.forEach(async (guild) => {
 				await insertNewGuild(guild.id)
