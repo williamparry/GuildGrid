@@ -220,7 +220,7 @@ function Grid() {
 	}
 
 	return (
-		<>
+		<div id="grid-main">
 			<ReactGrid
 				rows={rows}
 				columns={columns}
@@ -229,7 +229,7 @@ function Grid() {
 				enableFillHandle
 			/>
 			<ToastContainer />
-		</>
+		</div>
 	)
 }
 
