@@ -98,6 +98,8 @@ async function updateGuildMemberships(guild) {
 		const currentMembers = await guild.members.fetch()
 		const currentMemberIds = currentMembers.map((member) => member.user.id)
 
+		console.log('currentMemberIds', currentMemberIds)
+
 		// Fetch stored memberships
 		const { data: storedMemberships, error: fetchError } = await supabase
 			.from('gg_guild_memberships')
@@ -119,6 +121,8 @@ async function updateGuildMemberships(guild) {
 		const membersToRemove = storedMemberIds.filter(
 			(id) => !currentMemberIds.includes(id)
 		)
+
+		console.log('membersToAdd', membersToAdd)
 
 		// Perform bulk insert for new members
 		for (const userId of membersToAdd) {
