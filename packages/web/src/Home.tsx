@@ -1,25 +1,15 @@
-import { useEffect, useState } from 'react'
 import {
-	ReactGrid,
-	Highlight,
-	Column,
-	Row,
-	CellChange,
-} from '@silevis/reactgrid'
-import { createClient } from '@supabase/supabase-js'
-import { ToastContainer, toast } from 'react-toastify'
-import { useParams } from 'react-router-dom'
-import '@silevis/reactgrid/styles.css'
-import 'react-toastify/dist/ReactToastify.css'
-import {
-	Link,
-	List,
-	ListItem,
-	ListItemButton,
-	ListItemText,
-	Paper,
-	Typography,
+    Link,
+    List,
+    ListItemButton,
+    ListItemText,
+    Paper,
+    Typography
 } from '@mui/material'
+import '@silevis/reactgrid/styles.css'
+import { createClient } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import 'react-toastify/dist/ReactToastify.css'
 
 const supabase = createClient(
 	import.meta.env.VITE_SUPABASE_URL,
@@ -32,7 +22,7 @@ function Home() {
 	const [grids, setGrids] = useState<
 		{
 			guild_id: string
-			gridSlug: string
+			grid_slug: string
 			grid_name: string
 		}[]
 	>([])
@@ -44,7 +34,6 @@ function Home() {
 			} = await supabase.auth.getUser()
 
 			if (user) {
-				
 				const { data, error } = await supabase
 					.from('gg_grids')
 					.select('*')
@@ -66,16 +55,19 @@ function Home() {
 	}
 
 	return (
-		<Paper sx={{ maxWidth: 600, margin: 'auto', padding: 2 }}>
-			<Typography variant="h4" sx={{ marginBottom: 2 }}>
+		<Paper
+			sx={{ maxWidth: 600, margin: 'auto', padding: 2, marginTop: 4 }}
+			elevation={10}
+		>
+			<Typography variant="h5" sx={{ marginBottom: 2 }}>
 				My Grids
 			</Typography>
 			<List>
 				{grids.map((grid, index) => (
 					<ListItemButton
-						key={index}
+						key={`list-item-${index}`}
 						component={Link}
-						href={`/grids/${grid.guild_id}/${grid.grid_slug}`}
+						to={`/grids/${grid.guild_id}/${grid.grid_slug}`}
 					>
 						<ListItemText primary={grid.grid_name} />
 					</ListItemButton>
