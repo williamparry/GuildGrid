@@ -98,8 +98,6 @@ async function updateGuildMemberships(guild) {
 		const currentMembers = await guild.members.fetch()
 		const currentMemberIds = currentMembers.map((member) => member.user.id)
 
-		console.log('currentMemberIds', currentMemberIds)
-
 		// Fetch stored memberships
 		const { data: storedMemberships, error: fetchError } = await supabase
 			.from('gg_guild_memberships')

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createClient, User } from '@supabase/supabase-js'
+import { createClient, Session, User } from '@supabase/supabase-js'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import AppBar from '@mui/material/AppBar'
 import CssBaseline from '@mui/material/CssBaseline'
@@ -10,7 +10,13 @@ import 'react-toastify/dist/ReactToastify.css'
 import Grid from './Grid'
 import { AccountCircle } from '@mui/icons-material'
 import Home from './Home'
-import { ThemeProvider, createTheme } from '@mui/material'
+import {
+	Button,
+	Menu,
+	MenuItem,
+	ThemeProvider,
+	createTheme,
+} from '@mui/material'
 
 const supabase = createClient(
 	import.meta.env.VITE_SUPABASE_URL,
@@ -25,6 +31,22 @@ const darkTheme = createTheme({
 
 function App() {
 	const [user, setUser] = useState<User | null>(null)
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+	const [isLoading, setLoading] = useState(true)
+	const [session, setSession] = useState<Session>()
+
+	const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+		setAnchorEl(event.currentTarget)
+	}
+
+	const handleClose = () => {
+		setAnchorEl(null)
+	}
+
+	const handleLogout = async () => {
+		handleClose()
+		await supabase.auth.signOut()
+	}
 
 	const fetchUser = async () => {
 		const {
@@ -46,13 +68,19 @@ function App() {
 	}
 
 	useEffect(() => {
-		if (!user) {
-			console.log('user')
+		// @ts-ignore
+		supabase.auth.getSession().then(({ session }) => {
+			setSession(session)
+			setLoading(false)
+		})
+	})
+
+	useEffect(() => {
+		if (!isLoading && !user && session) {
 			fetchUser()
 		} else {
 			const { data: authListener } = supabase.auth.onAuthStateChange(
 				async (_event, session) => {
-					console.log('set')
 					setUser(session?.user ?? null)
 				}
 			)
@@ -60,15 +88,18 @@ function App() {
 				authListener?.subscription.unsubscribe()
 			}
 		}
-	}, [])
+	}, [session, isLoading, user])
 
 	if (!user) {
 		return (
-			<div>
-				<button onClick={signInWithDiscord}>
-					Sign in with Discord
-				</button>
-			</div>
+			<ThemeProvider theme={darkTheme}>
+				<CssBaseline />
+				<div>
+					<Button onClick={signInWithDiscord}>
+						Sign in with Discord
+					</Button>
+				</div>
+			</ThemeProvider>
 		)
 	}
 
@@ -89,9 +120,30 @@ function App() {
 								Guild Grid
 							</Link>
 						</Typography>
-						<IconButton edge="end" color="inherit">
+						<IconButton
+							edge="end"
+							color="inherit"
+							onClick={handleMenu}
+						>
 							<AccountCircle />
 						</IconButton>
+						<Menu
+							id="menu-appbar"
+							anchorEl={anchorEl}
+							anchorOrigin={{
+								vertical: 'top',
+								horizontal: 'right',
+							}}
+							keepMounted
+							transformOrigin={{
+								vertical: 'top',
+								horizontal: 'right',
+							}}
+							open={Boolean(anchorEl)}
+							onClose={handleClose}
+						>
+							<MenuItem onClick={handleLogout}>Logout</MenuItem>
+						</Menu>
 					</Toolbar>
 				</AppBar>
 
