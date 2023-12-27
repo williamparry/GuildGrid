@@ -1,9 +1,7 @@
 {
     "name": "guildgrid",
     "private": true,
-    "workspaces": [
-        "packages/*"
-    ],
+
     "scripts": {
         "web": "nodemon packages/web/index.js",
         "bot": "nodemon packages/bot/index.mjs",
