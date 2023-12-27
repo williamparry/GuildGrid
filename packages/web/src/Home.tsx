@@ -6,17 +6,9 @@ import {
 	Typography,
 } from '@mui/material'
 import { Link } from 'react-router-dom'
-import '@silevis/reactgrid/styles.css'
-import { createClient } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
-import 'react-toastify/dist/ReactToastify.css'
 
-const supabase = createClient(
-	import.meta.env.VITE_SUPABASE_URL,
-	import.meta.env.VITE_SUPABASE_ANON_KEY
-)
-
-function Home() {
+function Home({ supabase }) {
 	const [loading, setLoading] = useState(false)
 
 	const [grids, setGrids] = useState<

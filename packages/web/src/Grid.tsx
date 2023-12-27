@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react'
 import { ReactGrid, Column, Row, CellChange } from '@silevis/reactgrid'
-import { createClient } from '@supabase/supabase-js'
 import { ToastContainer, toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
 import '@silevis/reactgrid/styles.css'
-import 'react-toastify/dist/ReactToastify.css'
 
-const supabase = createClient(
-	import.meta.env.VITE_SUPABASE_URL,
-	import.meta.env.VITE_SUPABASE_ANON_KEY
-)
-
-function Grid() {
+function Grid({supabase}) {
 	const [rows, setRows] = useState<Row[]>([])
 	const [columns, setColumns] = useState<Column[]>([])
 	const [loading, setLoading] = useState(false)

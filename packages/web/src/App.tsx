@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createClient, User } from '@supabase/supabase-js'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import '@silevis/reactgrid/styles.css'
 import AppBar from '@mui/material/AppBar'
 import CssBaseline from '@mui/material/CssBaseline'
 import IconButton from '@mui/material/IconButton'
@@ -92,10 +91,13 @@ function App() {
 
 				<main>
 					<Routes>
-						<Route path="/" element={<Home />}></Route>
+						<Route
+							path="/"
+							element={<Home supabase={supabase} />}
+						></Route>
 						<Route
 							path="/grids/:guildId/:gridSlug"
-							element={<Grid />}
+							element={<Grid supabase={supabase} />}
 						></Route>
 					</Routes>
 				</main>
