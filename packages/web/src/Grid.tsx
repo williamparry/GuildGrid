@@ -1,21 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { ReactGrid, Column, Row, CellChange } from '@silevis/reactgrid'
 import { ToastContainer, toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
 import '@silevis/reactgrid/styles.css'
+import { SupabaseClient } from '@supabase/supabase-js'
 
-function Grid({supabase}) {
+function Grid({ supabase }: { supabase: SupabaseClient }) {
 	const [rows, setRows] = useState<Row[]>([])
 	const [columns, setColumns] = useState<Column[]>([])
 	const [loading, setLoading] = useState(false)
 	const { guildId, gridSlug } = useParams()
 
-	const notifyError = (error: any) => {
+	const notifyError = (error: { message: string }) => {
 		toast.error(`Error: ${error.message}`)
 	}
 
 	async function loadGridData() {
-		const { data, error } = await supabase
+		const { data } = await supabase
 			.from('gg_cells')
 			.select('*')
 			.eq('guild_id', guildId)
@@ -29,7 +31,7 @@ function Grid({supabase}) {
 				rowId: `R-${i}`,
 				cells: Array(100)
 					.fill({})
-					.map((c, x) => {
+					.map((_c, x) => {
 						const cellData = data?.find(
 							(d) => d.gg_row === i && d.gg_column === x
 						)
@@ -46,9 +48,9 @@ function Grid({supabase}) {
 		setColumns(columns)
 	}
 	async function handleCellsChanged(changes: CellChange[]) {
-		let newRows = [...rows]
-		let deleteRequests = []
-		let updateRequests = []
+		const newRows = [...rows]
+		const deleteRequests = []
+		const updateRequests = []
 
 		for (const change of changes) {
 			if (change.type === 'text') {
@@ -74,8 +76,9 @@ function Grid({supabase}) {
 						gg_column: columnIndex.toString(),
 						gg_value: newCell.text,
 					}
-					if (existingCell.id) {
-						updateRequest.id = existingCell.id
+
+					if ((existingCell as any).id) {
+						(updateRequest as any).id = (existingCell as any).id
 					}
 					updateRequests.push(updateRequest)
 				}
@@ -85,7 +88,7 @@ function Grid({supabase}) {
 					...newRows[rowIndex].cells[columnIndex],
 					type: 'text',
 					text: newCell.text,
-					validator: (text: string) => true,
+					validator: () => true,
 				}
 			}
 		}

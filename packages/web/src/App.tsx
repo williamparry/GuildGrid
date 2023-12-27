@@ -63,7 +63,13 @@ function App() {
 	}, [])
 
 	if (!user) {
-		return <button onClick={signInWithDiscord}>Sign in with Discord</button>
+		return (
+			<div>
+				<button onClick={signInWithDiscord}>
+					Sign in with Discord
+				</button>
+			</div>
+		)
 	}
 
 	return (

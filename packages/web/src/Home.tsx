@@ -7,10 +7,9 @@ import {
 } from '@mui/material'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { SupabaseClient } from '@supabase/supabase-js'
 
-function Home({ supabase }) {
-	const [loading, setLoading] = useState(false)
-
+function Home({ supabase }: { supabase: SupabaseClient }) {
 	const [grids, setGrids] = useState<
 		{
 			guild_id: string
@@ -25,7 +24,7 @@ function Home({ supabase }) {
 				data: { user },
 			} = await supabase.auth.getUser()
 
-			if (user) {
+			if (user && user.identities) {
 				const { data, error } = await supabase
 					.from('gg_grids')
 					.select('*')
@@ -41,10 +40,6 @@ function Home({ supabase }) {
 
 		fetchGrids()
 	}, [])
-
-	if (loading) {
-		return <div>Loading...</div>
-	}
 
 	return (
 		<Paper
