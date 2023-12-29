@@ -110,12 +110,6 @@ function App() {
 								<Button onClick={signInWithDiscord}>
 									Sign in with Discord
 								</Button>
-								<Button
-									href="https://discord.gg/kSuSm46sCC"
-									variant="outlined"
-								>
-									Request access
-								</Button>
 							</div>
 						</div>
 						<img
@@ -173,16 +167,31 @@ function App() {
 							</CardContent>
 						</Card>
 					</div>
-					<Typography
-						variant="body2"
+					<div
 						style={{
-							textAlign: 'center',
-							marginTop: 30,
-							marginBottom: 30,
+							display: 'flex',
+							columnGap: 15,
+							alignItems: 'center',
 						}}
 					>
-						Made in Sydney, Australia
-					</Typography>
+						<Typography
+							variant="body2"
+							style={{
+								textAlign: 'center',
+								marginTop: 30,
+								marginBottom: 30,
+							}}
+						>
+							Made in Sydney, Australia
+						</Typography>
+						<Button
+							href="https://discord.gg/kSuSm46sCC"
+							variant="outlined"
+							size="small"
+						>
+							Request early access
+						</Button>
+					</div>
 				</Container>
 			</ThemeProvider>
 		)
