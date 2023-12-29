@@ -189,7 +189,7 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 		if (!loading) {
 			subscribeWithScope()
 		}
-	}, [password])
+	}, [loading, password])
 
 	function subscribeToChanges() {
 		const cellsSubscription = supabase
