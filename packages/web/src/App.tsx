@@ -112,6 +112,11 @@ function App() {
 								</Button>
 							</div>
 						</div>
+						<Typography variant="h6" component="h2">
+							Make collaborative data grids within Discord.
+							<br />
+							No more Google Sheets.
+						</Typography>
 						<img
 							src="/screenshot.png"
 							alt="Guild Grid screenshot"
@@ -120,13 +125,13 @@ function App() {
 						<Card>
 							<CardContent>
 								<Typography variant="h5" component="div">
-									No more Google Sheets
+									Use your Discord account
 								</Typography>
 
 								<Typography variant="body2">
-									Your Discord users can access and make grids
-									directly from Discord using their existing
-									accounts.
+									Your Discord channel users can access and
+									make grids directly from Discord using their
+									existing accounts.
 								</Typography>
 							</CardContent>
 						</Card>
