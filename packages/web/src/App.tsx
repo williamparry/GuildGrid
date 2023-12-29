@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createClient, Session, User } from '@supabase/supabase-js'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import AppBar from '@mui/material/AppBar'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import CssBaseline from '@mui/material/CssBaseline'
-import IconButton from '@mui/material/IconButton'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
 import 'react-toastify/dist/ReactToastify.css'
 import Grid from './Grid'
-import { AccountCircle } from '@mui/icons-material'
 import Home from './Home'
-import {
-	Button,
-	Menu,
-	MenuItem,
-	ThemeProvider,
-	createTheme,
-} from '@mui/material'
+import { Button, ThemeProvider, createTheme } from '@mui/material'
 
 const supabase = createClient(
 	import.meta.env.VITE_SUPABASE_URL,
@@ -31,22 +20,8 @@ const darkTheme = createTheme({
 
 function App() {
 	const [user, setUser] = useState<User | null>(null)
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 	const [isLoading, setLoading] = useState(true)
 	const [session, setSession] = useState<Session>()
-
-	const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-		setAnchorEl(event.currentTarget)
-	}
-
-	const handleClose = () => {
-		setAnchorEl(null)
-	}
-
-	const handleLogout = async () => {
-		handleClose()
-		await supabase.auth.signOut()
-	}
 
 	const fetchUser = async () => {
 		const {
@@ -107,58 +82,17 @@ function App() {
 		<Router>
 			<ThemeProvider theme={darkTheme}>
 				<CssBaseline />
-				<AppBar position="static">
-					<Toolbar>
-						<Typography variant="h6" sx={{ flexGrow: 1 }}>
-							<Link
-								to="/"
-								style={{
-									color: '#fff',
-									textDecoration: 'none',
-								}}
-							>
-								Guild Grid
-							</Link>
-						</Typography>
-						<IconButton
-							edge="end"
-							color="inherit"
-							onClick={handleMenu}
-						>
-							<AccountCircle />
-						</IconButton>
-						<Menu
-							id="menu-appbar"
-							anchorEl={anchorEl}
-							anchorOrigin={{
-								vertical: 'top',
-								horizontal: 'right',
-							}}
-							keepMounted
-							transformOrigin={{
-								vertical: 'top',
-								horizontal: 'right',
-							}}
-							open={Boolean(anchorEl)}
-							onClose={handleClose}
-						>
-							<MenuItem onClick={handleLogout}>Logout</MenuItem>
-						</Menu>
-					</Toolbar>
-				</AppBar>
 
-				<main>
-					<Routes>
-						<Route
-							path="/"
-							element={<Home supabase={supabase} />}
-						></Route>
-						<Route
-							path="/grids/:guildId/:gridSlug"
-							element={<Grid supabase={supabase} />}
-						></Route>
-					</Routes>
-				</main>
+				<Routes>
+					<Route
+						path="/"
+						element={<Home supabase={supabase} />}
+					></Route>
+					<Route
+						path="/grids/:guildId/:gridSlug"
+						element={<Grid supabase={supabase} />}
+					></Route>
+				</Routes>
 			</ThemeProvider>
 		</Router>
 	)

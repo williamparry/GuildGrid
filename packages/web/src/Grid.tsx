@@ -5,18 +5,38 @@ import { ToastContainer, toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
 import '@silevis/reactgrid/styles.css'
 import { SupabaseClient } from '@supabase/supabase-js'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
+import TopBar from './TopBar'
+import {
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	IconButton,
+	TextField,
+} from '@mui/material'
+import LockIcon from '@mui/icons-material/Lock'
+import CryptoJS from 'crypto-js'
 
 function Grid({ supabase }: { supabase: SupabaseClient }) {
 	const [rows, setRows] = useState<Row[]>([])
 	const [columns, setColumns] = useState<Column[]>([])
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 	const { guildId, gridSlug } = useParams()
+	const [gridData, setGridData] = useState<any>({})
+	const [password, setPassword] = useState<string>()
+	const [passwordText, setPasswordText] = useState<string>('')
+	const [open, setOpen] = useState(false)
+	const [openEnterPassword, setOpenEnterPassword] = useState(false)
+	const [hasInitialised, setHasInitialised] = useState(false)
 
 	const notifyError = (error: { message: string }) => {
 		toast.error(`Error: ${error.message}`)
 	}
 
-	async function loadGridData() {
+	async function loadGridCells() {
 		const { data } = await supabase
 			.from('gg_cells')
 			.select('*')
@@ -35,9 +55,16 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 						const cellData = data?.find(
 							(d) => d.gg_row === i && d.gg_column === x
 						)
+						const val = cellData?.gg_value
 						return {
 							type: 'text',
-							text: cellData?.gg_value || '',
+							text: !val
+								? ''
+								: password
+								? CryptoJS.AES.decrypt(val, password).toString(
+										CryptoJS.enc.Utf8
+								  )
+								: val,
 							id: cellData?.id, // Store the id of the cell
 						}
 					}),
@@ -46,6 +73,16 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 		}
 		setRows(rows)
 		setColumns(columns)
+	}
+
+	async function loadGridData() {
+		const { data } = await supabase
+			.from('gg_grids')
+			.select('*')
+			.eq('guild_id', guildId)
+			.eq('grid_slug', gridSlug)
+			.single()
+		setGridData(data)
 	}
 	async function handleCellsChanged(changes: CellChange[]) {
 		const newRows = [...rows]
@@ -74,11 +111,18 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 						guild_id: guildId,
 						gg_row: rowIndex.toString(),
 						gg_column: columnIndex.toString(),
-						gg_value: newCell.text,
+						gg_value: !newCell.text
+							? ''
+							: password
+							? CryptoJS.AES.encrypt(
+									newCell.text,
+									password
+							  ).toString()
+							: newCell.text,
 					}
 
 					if ((existingCell as any).id) {
-						(updateRequest as any).id = (existingCell as any).id
+						;(updateRequest as any).id = (existingCell as any).id
 					}
 					updateRequests.push(updateRequest)
 				}
@@ -118,10 +162,34 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 	}
 
 	useEffect(() => {
+		if (hasInitialised) {
+			loadGridCells()
+		}
+	}, [hasInitialised])
+
+	useEffect(() => {
+		if (!loading) {
+			if (gridData.has_password) {
+				setOpenEnterPassword(true)
+			} else {
+				setHasInitialised(true)
+			}
+		}
+	}, [gridData, loading])
+
+	useEffect(() => {
 		setLoading(true)
-		loadGridData().finally(() => setLoading(false))
-		subscribeToChanges()
+		loadGridData().finally(() => {
+			setLoading(false)
+		})
 	}, [])
+
+	useEffect(() => {
+		const subscribeWithScope = subscribeToChanges.bind(this as any)
+		if (!loading) {
+			subscribeWithScope()
+		}
+	}, [password])
 
 	function subscribeToChanges() {
 		const cellsSubscription = supabase
@@ -129,7 +197,7 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 			.on(
 				'postgres_changes',
 				{ event: '*', schema: 'public', table: 'gg_cells' },
-				(payload) => {
+				function (payload) {
 					const { new: newRow, old: oldRow, eventType } = payload
 
 					switch (eventType) {
@@ -161,9 +229,17 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 			} else {
 				// Updating an existing row
 				const updatedRow = { ...currentRows[rowIndex] }
+
 				updatedRow.cells[newRowData.gg_column] = {
 					type: 'text',
-					text: newRowData.gg_value,
+					text: !newRowData.gg_value
+						? ''
+						: password
+						? CryptoJS.AES.decrypt(
+								newRowData.gg_value,
+								password
+						  ).toString(CryptoJS.enc.Utf8)
+						: newRowData.gg_value,
 				}
 				return [
 					...currentRows.slice(0, rowIndex),
@@ -178,10 +254,20 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 		const numberOfColumns = 100
 		const cells = Array(numberOfColumns)
 			.fill({})
-			.map((_, columnIndex) => ({
-				type: 'text' as const, // Explicitly specify the cell type as a literal
-				text: columnIndex === rowData.gg_column ? rowData.gg_value : '',
-			}))
+			.map((_, columnIndex) => {
+				const val = rowData.gg_value
+					? ''
+					: password
+					? CryptoJS.AES.decrypt(rowData.gg_value, password).toString(
+							CryptoJS.enc.Utf8
+					  )
+					: rowData.gg_value
+
+				return {
+					type: 'text' as const, // Explicitly specify the cell type as a literal
+					text: columnIndex === rowData.gg_column ? val : '',
+				}
+			})
 
 		return {
 			rowId: `R-${rowData.gg_row}`,
@@ -211,21 +297,138 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 		})
 	}
 
-	if (loading) {
-		return
+	const handleCreatePassword = async () => {
+		setOpen(true)
+	}
+
+	const handleClose = () => {
+		setOpen(false)
+	}
+
+	const handleCloseEnterPassword = () => {
+		setOpenEnterPassword(false)
 	}
 
 	return (
-		<div id="grid-main">
-			<ReactGrid
-				rows={rows}
-				columns={columns}
-				onCellsChanged={handleCellsChanged}
-				enableRangeSelection
-				enableFillHandle
-			/>
-			<ToastContainer />
-		</div>
+		<>
+			<TopBar
+				supabase={supabase}
+				rightItems={
+					(!password && (
+						<IconButton
+							edge="end"
+							color="inherit"
+							onClick={handleCreatePassword}
+						>
+							<LockOpenIcon />
+						</IconButton>
+					)) ||
+					(password && (
+						<IconButton edge="end" color="inherit">
+							<LockIcon />
+						</IconButton>
+					))
+				}
+			></TopBar>
+			<main>
+				<div id="grid-main">
+					{!loading && (
+						<ReactGrid
+							rows={rows}
+							columns={columns}
+							onCellsChanged={handleCellsChanged}
+							enableRangeSelection
+							enableFillHandle
+						/>
+					)}
+					<ToastContainer />
+				</div>
+			</main>
+			<Dialog open={open} onClose={handleClose}>
+				<DialogTitle>Add password</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						Adding a password will encrypt your grid contents. Guild
+						Grid does not store the decryption code so if you lose
+						it, it's lost.
+					</DialogContentText>
+					<TextField
+						autoFocus
+						margin="dense"
+						id="name"
+						label="Password"
+						type="text"
+						fullWidth
+						variant="standard"
+						value={passwordText}
+						onChange={(e) => {
+							setPasswordText(
+								(e.target as HTMLInputElement).value
+							)
+						}}
+					/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleClose}>Cancel</Button>
+					<Button
+						onClick={async () => {
+							if (passwordText) {
+								const { error } = await supabase
+									.from('gg_grids')
+									.update({
+										has_password: true,
+									})
+									.eq('id', gridData.id)
+								if (error) {
+									notifyError(error)
+								}
+								setPassword(passwordText)
+								handleClose()
+							}
+						}}
+					>
+						Set Password
+					</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={openEnterPassword} onClose={handleCloseEnterPassword}>
+				<DialogTitle>Enter password</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						This grid is password protected. Enter the password to
+						view it
+					</DialogContentText>
+					<TextField
+						autoFocus
+						margin="dense"
+						id="name"
+						label="Password"
+						type="text"
+						fullWidth
+						variant="standard"
+						value={passwordText}
+						onChange={(e) => {
+							setPasswordText(
+								(e.target as HTMLInputElement).value
+							)
+						}}
+					/>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => {
+							if (passwordText) {
+								setPassword(passwordText)
+								handleCloseEnterPassword()
+								setHasInitialised(true)
+							}
+						}}
+					>
+						Submit
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</>
 	)
 }
 

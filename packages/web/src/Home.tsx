@@ -8,6 +8,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { SupabaseClient } from '@supabase/supabase-js'
+import TopBar from './TopBar'
 
 function Home({ supabase }: { supabase: SupabaseClient }) {
 	const [grids, setGrids] = useState<
@@ -42,25 +43,35 @@ function Home({ supabase }: { supabase: SupabaseClient }) {
 	}, [])
 
 	return (
-		<Paper
-			sx={{ maxWidth: 600, margin: 'auto', padding: 2, marginTop: 4 }}
-			elevation={10}
-		>
-			<Typography variant="h5" sx={{ marginBottom: 2 }}>
-				My Grids
-			</Typography>
-			<List>
-				{grids.map((grid, index) => (
-					<ListItemButton
-						key={`list-item-${index}`}
-						component={Link}
-						to={`/grids/${grid.guild_id}/${grid.grid_slug}`}
-					>
-						<ListItemText primary={grid.grid_name} />
-					</ListItemButton>
-				))}
-			</List>
-		</Paper>
+		<>
+			<TopBar supabase={supabase}></TopBar>
+			<main>
+				<Paper
+					sx={{
+						maxWidth: 600,
+						margin: 'auto',
+						padding: 2,
+						marginTop: 4,
+					}}
+					elevation={10}
+				>
+					<Typography variant="h5" sx={{ marginBottom: 2 }}>
+						My Grids
+					</Typography>
+					<List>
+						{grids.map((grid, index) => (
+							<ListItemButton
+								key={`list-item-${index}`}
+								component={Link}
+								to={`/grids/${grid.guild_id}/${grid.grid_slug}`}
+							>
+								<ListItemText primary={grid.grid_name} />
+							</ListItemButton>
+						))}
+					</List>
+				</Paper>
+			</main>
+		</>
 	)
 }
 
