@@ -41,7 +41,7 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 			.from('gg_cells')
 			.select('*')
 			.eq('guild_id', guildId)
-			.eq('grid_slug', gridSlug)
+			.eq('grid_id', gridData.id)
 
 		const rows: Row[] = []
 		const columns: Column[] = []
@@ -99,7 +99,7 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 				if (newCell.text === '') {
 					// Prepare the delete request for cleared cells
 					deleteRequests.push({
-						grid_slug: gridSlug,
+						grid_id: gridData.id,
 						guild_id: guildId,
 						gg_row: rowIndex.toString(),
 						gg_column: columnIndex.toString(),
@@ -107,7 +107,7 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 				} else {
 					// Prepare the update request for cells with content
 					const updateRequest = {
-						grid_slug: gridSlug,
+						grid_id: gridData.id,
 						guild_id: guildId,
 						gg_row: rowIndex.toString(),
 						gg_column: columnIndex.toString(),

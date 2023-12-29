@@ -218,12 +218,15 @@ const startBot = async () => {
 			const gridName =
 				interaction.options.getString('grid_name') ||
 				`${interaction.user.username}'s grid`
-			const randomString = Math.random().toString(36).substr(2, 5) // Short random string
+
 			const gridSlugBase = gridName
 				.toLowerCase()
 				.replace(/\s+/g, '-')
 				.replace(/[^a-z0-9-]/g, '')
-			const gridSlug = `${gridSlugBase}-${randomString}`.substr(0, 100) // Ensuring it doesn't exceed 100 chars
+			const gridSlug = `${gridSlugBase}-${crypto.randomUUID()}`.substr(
+				0,
+				400
+			)
 
 			// Generate a new grid instance and store in the database
 			const { data, error } = await supabase
