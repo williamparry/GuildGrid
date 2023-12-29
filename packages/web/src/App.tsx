@@ -5,7 +5,15 @@ import CssBaseline from '@mui/material/CssBaseline'
 import 'react-toastify/dist/ReactToastify.css'
 import Grid from './Grid'
 import Home from './Home'
-import { Button, ThemeProvider, createTheme } from '@mui/material'
+import {
+	Button,
+	Card,
+	CardContent,
+	Container,
+	ThemeProvider,
+	Typography,
+	createTheme,
+} from '@mui/material'
 
 const supabase = createClient(
 	import.meta.env.VITE_SUPABASE_URL,
@@ -69,11 +77,113 @@ function App() {
 		return (
 			<ThemeProvider theme={darkTheme}>
 				<CssBaseline />
-				<div>
-					<Button onClick={signInWithDiscord}>
-						Sign in with Discord
-					</Button>
-				</div>
+				<Container maxWidth="sm">
+					<div
+						style={{
+							display: 'flex',
+							flexDirection: 'column',
+							rowGap: 30,
+							marginTop: 30,
+						}}
+					>
+						<div
+							style={{
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+							}}
+						>
+							<Typography
+								variant="h2"
+								component="div"
+								style={{ flexShrink: 0 }}
+							>
+								Guild Grid
+							</Typography>
+							<div
+								style={{
+									display: 'flex',
+									justifyContent: 'flex-end',
+									flexDirection: 'column',
+								}}
+							>
+								<Button onClick={signInWithDiscord}>
+									Sign in with Discord
+								</Button>
+								<Button
+									href="https://discord.gg/kSuSm46sCC"
+									variant="outlined"
+								>
+									Request access
+								</Button>
+							</div>
+						</div>
+						<img
+							src="/screenshot.png"
+							alt="Guild Grid screenshot"
+							width="100%"
+						/>
+						<Card>
+							<CardContent>
+								<Typography variant="h5" component="div">
+									No more Google Sheets
+								</Typography>
+
+								<Typography variant="body2">
+									Your Discord users can access and make grids
+									directly from Discord using their existing
+									accounts.
+								</Typography>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardContent>
+								<Typography variant="h5" component="div">
+									Bot included
+								</Typography>
+
+								<Typography variant="body2">
+									Just use the <code>/grid</code> command to
+									generate a collaborative grid.
+								</Typography>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardContent>
+								<Typography variant="h5" component="div">
+									Cell-level encryption.
+								</Typography>
+
+								<Typography variant="body2">
+									Optional encryption for your grid cells
+									means that Guild Grid cannot see the
+									contents.
+								</Typography>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardContent>
+								<Typography variant="h5" component="div">
+									Realtime
+								</Typography>
+
+								<Typography variant="body2">
+									See changes in real time.
+								</Typography>
+							</CardContent>
+						</Card>
+					</div>
+					<Typography
+						variant="body2"
+						style={{
+							textAlign: 'center',
+							marginTop: 30,
+							marginBottom: 30,
+						}}
+					>
+						Made in Sydney, Australia
+					</Typography>
+				</Container>
 			</ThemeProvider>
 		)
 	}
