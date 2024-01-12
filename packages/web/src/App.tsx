@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { createClient, Session, User } from '@supabase/supabase-js'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import DownloadIcon from '@mui/icons-material/Download'
+import GitHubIcon from '@mui/icons-material/GitHub'
+import HelpIcon from '@mui/icons-material/Help'
 import CssBaseline from '@mui/material/CssBaseline'
 import 'react-toastify/dist/ReactToastify.css'
 import Grid from './Grid'
@@ -51,11 +54,12 @@ function App() {
 	}
 
 	useEffect(() => {
-		// @ts-ignore
-		supabase.auth.getSession().then(({ session }) => {
-			setSession(session)
-			setLoading(false)
-		})
+		supabase.auth
+			.getSession()
+			.then(({ data: { session } }: { data: { session: Session } }) => {
+				setSession(session)
+				setLoading(false)
+			})
 	})
 
 	useEffect(() => {
@@ -73,6 +77,9 @@ function App() {
 		}
 	}, [session, isLoading, user])
 
+	if (isLoading) {
+		return <></>
+	}
 	if (!user) {
 		return (
 			<ThemeProvider theme={darkTheme}>
@@ -107,7 +114,13 @@ function App() {
 									flexDirection: 'column',
 								}}
 							>
-								<Button onClick={signInWithDiscord}>
+								<Typography variant="caption" component="small">
+									To view your grids
+								</Typography>
+								<Button
+									onClick={signInWithDiscord}
+									variant="outlined"
+								>
 									Sign in with Discord
 								</Button>
 							</div>
@@ -122,16 +135,35 @@ function App() {
 							alt="Guild Grid screenshot"
 							width="100%"
 						/>
+						<div>
+							<Button
+								variant="contained"
+								size="large"
+								startIcon={<DownloadIcon />}
+								onClick={(e) => {
+									e.preventDefault()
+									if (
+										confirm(
+											'THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
+										)
+									) {
+										window.location.href =
+											'https://discord.com/api/oauth2/authorize?client_id=1189312952273223741&scope=applications.commands'
+									}
+								}}
+							>
+								Install Guild Grid on your Discord channel
+							</Button>
+						</div>
 						<Card>
 							<CardContent>
 								<Typography variant="h5" component="div">
-									Use your Discord account
+									No external accounts, only Discord
 								</Typography>
 
 								<Typography variant="body2">
-									Your Discord channel users can access and
-									make grids directly from Discord using their
-									existing accounts.
+									Your members access and make grids directly
+									from within your channel.
 								</Typography>
 							</CardContent>
 						</Card>
@@ -143,14 +175,14 @@ function App() {
 
 								<Typography variant="body2">
 									Just use the <code>/grid</code> command to
-									generate a collaborative grid.
+									instantly generate a collaborative grid.
 								</Typography>
 							</CardContent>
 						</Card>
 						<Card>
 							<CardContent>
 								<Typography variant="h5" component="div">
-									Cell-level encryption.
+									Cell-level encryption
 								</Typography>
 
 								<Typography variant="body2">
@@ -167,7 +199,21 @@ function App() {
 								</Typography>
 
 								<Typography variant="body2">
-									See changes in real time.
+									See grid changes from all members live in
+									real time.
+								</Typography>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardContent>
+								<Typography variant="h5" component="div">
+									Open-source
+								</Typography>
+
+								<Typography variant="body2">
+									Use guildgrid.app or run on your own server.
+									The code is open-source and available on
+									GitHub. PRs are welcome 😊
 								</Typography>
 							</CardContent>
 						</Card>
@@ -177,6 +223,7 @@ function App() {
 							display: 'flex',
 							columnGap: 15,
 							alignItems: 'center',
+							justifyContent: 'space-between',
 						}}
 					>
 						<Typography
@@ -189,13 +236,31 @@ function App() {
 						>
 							Made in Sydney, Australia
 						</Typography>
-						<Button
-							href="https://discord.gg/kSuSm46sCC"
-							variant="outlined"
-							size="small"
+						<div
+							style={{
+								display: 'flex',
+								columnGap: 15,
+								alignItems: 'center',
+							}}
 						>
-							Request early access
-						</Button>
+							<Button
+								startIcon={<GitHubIcon />}
+								href="https://github.com/williamparry/guildgrid.app"
+								variant="outlined"
+								size="small"
+							>
+								GitHub
+							</Button>
+							<Button
+								startIcon={<HelpIcon />}
+								href="https://discord.gg/kSuSm46sCC"
+								variant="outlined"
+								color="secondary"
+								size="small"
+							>
+								Help
+							</Button>
+						</div>
 					</div>
 				</Container>
 			</ThemeProvider>

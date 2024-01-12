@@ -1,7 +1,6 @@
 {
     "name": "guildgrid",
     "private": true,
-
     "scripts": {
         "web": "nodemon packages/web/index.js",
         "bot": "nodemon packages/bot/index.mjs",

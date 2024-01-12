@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
-import { ReactGrid, Column, Row, CellChange } from '@silevis/reactgrid'
+import {
+	ReactGrid,
+	Column,
+	Row,
+	CellChange,
+	DefaultCellTypes,
+} from '@silevis/reactgrid'
 import { ToastContainer, toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
 import '@silevis/reactgrid/styles.css'
@@ -20,7 +26,19 @@ import {
 import LockIcon from '@mui/icons-material/Lock'
 import CryptoJS from 'crypto-js'
 
+type UpsertRequest = {
+	id?: string
+	grid_id: string
+	guild_id: string
+	gg_row: string
+	gg_column: string
+	gg_value: string
+}
+
 function Grid({ supabase }: { supabase: SupabaseClient }) {
+	const MAX_COLUMNS: number = 100
+	const MAX_ROWS: number = 100
+
 	const [rows, setRows] = useState<Row[]>([])
 	const [columns, setColumns] = useState<Column[]>([])
 	const [loading, setLoading] = useState(true)
@@ -32,8 +50,26 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 	const [openEnterPassword, setOpenEnterPassword] = useState(false)
 	const [hasInitialised, setHasInitialised] = useState(false)
 
+	const subscribeWithScope = subscribeToChanges.bind(this as any)
+
 	const notifyError = (error: { message: string }) => {
 		toast.error(`Error: ${error.message}`)
+	}
+
+	const encryptionPass = (text?: string): string => {
+		return !text
+			? ''
+			: password
+			? CryptoJS.AES.encrypt(text, password).toString()
+			: text
+	}
+
+	const decryptionPass = (text?: string): string => {
+		return !text
+			? ''
+			: password
+			? CryptoJS.AES.decrypt(text, password).toString(CryptoJS.enc.Utf8)
+			: text
 	}
 
 	async function loadGridCells() {
@@ -46,25 +82,18 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 		const rows: Row[] = []
 		const columns: Column[] = []
 
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < MAX_ROWS; i++) {
 			rows.push({
 				rowId: `R-${i}`,
-				cells: Array(100)
+				cells: Array(MAX_COLUMNS)
 					.fill({})
 					.map((_c, x) => {
 						const cellData = data?.find(
 							(d) => d.gg_row === i && d.gg_column === x
 						)
-						const val = cellData?.gg_value
 						return {
 							type: 'text',
-							text: !val
-								? ''
-								: password
-								? CryptoJS.AES.decrypt(val, password).toString(
-										CryptoJS.enc.Utf8
-								  )
-								: val,
+							text: decryptionPass(cellData?.gg_value),
 							id: cellData?.id, // Store the id of the cell
 						}
 					}),
@@ -87,14 +116,15 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 	async function handleCellsChanged(changes: CellChange[]) {
 		const newRows = [...rows]
 		const deleteRequests = []
-		const updateRequests = []
+		const upsertRequests = []
 
 		for (const change of changes) {
 			if (change.type === 'text') {
 				const { rowId, columnId, newCell } = change
 				const rowIndex = parseInt((rowId as string).split('-')[1])
 				const columnIndex = parseInt((columnId as string).split('-')[1])
-				const existingCell = newRows[rowIndex].cells[columnIndex]
+				const existingCell: DefaultCellTypes & { id?: string } =
+					newRows[rowIndex].cells[columnIndex]
 
 				if (newCell.text === '') {
 					// Prepare the delete request for cleared cells
@@ -106,25 +136,18 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 					})
 				} else {
 					// Prepare the update request for cells with content
-					const updateRequest = {
+					const upsertRequest: UpsertRequest = {
 						grid_id: gridData.id,
 						guild_id: guildId,
 						gg_row: rowIndex.toString(),
 						gg_column: columnIndex.toString(),
-						gg_value: !newCell.text
-							? ''
-							: password
-							? CryptoJS.AES.encrypt(
-									newCell.text,
-									password
-							  ).toString()
-							: newCell.text,
+						gg_value: encryptionPass(newCell.text),
 					}
 
-					if ((existingCell as any).id) {
-						;(updateRequest as any).id = (existingCell as any).id
+					if (existingCell.id) {
+						upsertRequest.id = existingCell.id
 					}
-					updateRequests.push(updateRequest)
+					upsertRequests.push(upsertRequest)
 				}
 
 				// Update local state optimistically
@@ -151,10 +174,10 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 		}
 
 		// Perform the update operations
-		if (updateRequests.length > 0) {
+		if (upsertRequests.length > 0) {
 			const { error } = await supabase
 				.from('gg_cells')
-				.upsert(updateRequests)
+				.upsert(upsertRequests)
 			if (error) {
 				notifyError(error)
 			}
@@ -185,7 +208,6 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 	}, [])
 
 	useEffect(() => {
-		const subscribeWithScope = subscribeToChanges.bind(this as any)
 		if (!loading) {
 			subscribeWithScope()
 		}
@@ -232,14 +254,7 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 
 				updatedRow.cells[newRowData.gg_column] = {
 					type: 'text',
-					text: !newRowData.gg_value
-						? ''
-						: password
-						? CryptoJS.AES.decrypt(
-								newRowData.gg_value,
-								password
-						  ).toString(CryptoJS.enc.Utf8)
-						: newRowData.gg_value,
+					text: decryptionPass(newRowData.gg_value),
 				}
 				return [
 					...currentRows.slice(0, rowIndex),
@@ -251,21 +266,15 @@ function Grid({ supabase }: { supabase: SupabaseClient }) {
 	}
 
 	function createRow(rowData: any): Row {
-		const numberOfColumns = 100
-		const cells = Array(numberOfColumns)
+		const cells = Array(MAX_COLUMNS)
 			.fill({})
 			.map((_, columnIndex) => {
-				const val = rowData.gg_value
-					? ''
-					: password
-					? CryptoJS.AES.decrypt(rowData.gg_value, password).toString(
-							CryptoJS.enc.Utf8
-					  )
-					: rowData.gg_value
-
 				return {
 					type: 'text' as const, // Explicitly specify the cell type as a literal
-					text: columnIndex === rowData.gg_column ? val : '',
+					text:
+						columnIndex === rowData.gg_column
+							? decryptionPass(rowData.gg_value)
+							: '',
 				}
 			})
 
